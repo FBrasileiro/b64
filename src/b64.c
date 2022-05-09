@@ -51,18 +51,23 @@ char * b64_decode(char *input){
       j++;
     }
   }
-  len = len-j;
+  size_t index_len = len-j;
 
   char buf[4];
   int *indexes;
-  indexes = get_indexes(input, len);
-  char *txt = (char*)malloc(len);
+  indexes = get_indexes(input, index_len);
+
+  len = len-(len/4)-j; // Get txt length
+
+  char *txt = (char*)malloc(len+1);
   memset(txt, '\x0', len);
+  size_t total = 0;
   for(int i = 0 ; i < len; i+=4){
      buf[0] = (indexes[i] << 2) + ((indexes[i+1] & 0x30) >> 4);
      buf[1] = indexes[i+1] != -1 ? ((indexes[i+1] & 0xf) << 4) + ((indexes[i+2] & 0x3c) >> 2) : '\x0';
      buf[2] = indexes[i+2] != -1 ? ((indexes[i+2] & 0x3) << 6) + indexes[i+3] : '\x0';
-     strcat(txt, buf);
+     strncat(txt, buf, (len - total >= 3 ? 3 : len - total));
+     total+=3;
      memset(buf, '\x0', 4);
   }
   free(indexes);
